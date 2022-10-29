@@ -43,11 +43,14 @@ class OpCode(enum.IntEnum):
     EOR = 0x1e
     SFT = 0x1f
 
-def uxn_hex_literal(number: int) -> str:
+def uxn_byte_literal(number: int) -> str:
     text = hex(number)[2:]
     if number < 0x10:
         text = '0' + text
     return text
+
+def uxn_short_literal(number: int) -> str:
+    return '{:04x}'.format(number)
 
 def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
     i = 0
@@ -58,31 +61,31 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
         return_mode = bool(instruction & ModeMask.RETURN_MODE_MASK)
         opcode = OpCode(instruction & ~(ModeMask.KEEP_MODE_MASK | ModeMask.SHORT_MODE_MASK | ModeMask.RETURN_MODE_MASK))
 
-        line = f'|{uxn_hex_literal(i+0x100)}\t'
+        line = f'|{uxn_short_literal(i+0x100)}\t'
 
         if opcode == OpCode.LIT:
             if return_mode or instruction in (0x20, 0x40, 0x60):
-                line += f'{uxn_hex_literal(rom[i])}{uxn_hex_literal(rom[i+1])}'
+                line += f'{uxn_byte_literal(rom[i])}{uxn_byte_literal(rom[i+1])}'
                 i += 2
             elif not keep_mode:
-                line += f'BRK\t( {uxn_hex_literal(rom[i])} )'
+                line += f'BRK\t( {uxn_byte_literal(rom[i])} )'
                 i += 1
             elif short_mode:
                 if i + 1 >= len(rom):
-                    line += f'{uxn_hex_literal(rom[i])}'
+                    line += f'{uxn_byte_literal(rom[i])}'
                     i += 1
                 elif i + 2 >= len(rom):
-                    line += f'{uxn_hex_literal(rom[i])}{uxn_hex_literal(rom[i+1])}'
+                    line += f'{uxn_byte_literal(rom[i])}{uxn_byte_literal(rom[i+1])}'
                     i += 2
                 else:
-                    line += f'#{uxn_hex_literal(rom[i+1])}{uxn_hex_literal(rom[i+2])}\t( {uxn_hex_literal(instruction)}{uxn_hex_literal(rom[i+1])}{uxn_hex_literal(rom[i+2])} )'
+                    line += f'#{uxn_byte_literal(rom[i+1])}{uxn_byte_literal(rom[i+2])}\t( {uxn_byte_literal(instruction)}{uxn_byte_literal(rom[i+1])}{uxn_byte_literal(rom[i+2])} )'
                     i += 3
             else:
                 if i + 1 >= len(rom):
-                    line += f'{uxn_hex_literal(rom[i])}'
+                    line += f'{uxn_byte_literal(rom[i])}'
                     i += 1
                 else:
-                    line += f'#{uxn_hex_literal(rom[i+1])}\t( {uxn_hex_literal(instruction)}{uxn_hex_literal(rom[i+1])} )'
+                    line += f'#{uxn_byte_literal(rom[i+1])}\t( {uxn_byte_literal(instruction)}{uxn_byte_literal(rom[i+1])} )'
                     i += 2
 
             yield line
@@ -99,7 +102,7 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
         if return_mode:
             line += 'r'
 
-        line += f'\t( {uxn_hex_literal(instruction)} )'
+        line += f'\t( {uxn_byte_literal(instruction)} )'
 
         yield line
         i += 1

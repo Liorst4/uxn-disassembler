@@ -1,0 +1,216 @@
+( disassembler )
+
+%SHORT_MODE_MASK { #20 }
+%RETURN_MODE_MASK { #40 }
+%KEEP_MODE_MASK { #80 }
+%OPCODE_MASK { #1f }
+
+%EMIT { #18 DEO }
+%NEWLINE { #0a EMIT }
+%TAB { #09 EMIT }
+
+%HALT { #010f DEO }
+
+%OPCODE_LIT { #00 }
+%OPCODE_INC { #01 }
+%OPCODE_POP { #02 }
+%OPCODE_NIP { #03 }
+%OPCODE_SWP { #04 }
+%OPCODE_ROT { #05 }
+%OPCODE_DUP { #06 }
+%OPCODE_OVR { #07 }
+%OPCODE_EQU { #08 }
+%OPCODE_NEQ { #09 }
+%OPCODE_GTH { #0a }
+%OPCODE_LTH { #0b }
+%OPCODE_JMP { #0c }
+%OPCODE_JCN { #0d }
+%OPCODE_JSR { #0e }
+%OPCODE_STH { #0f }
+%OPCODE_LDZ { #10 }
+%OPCODE_STZ { #11 }
+%OPCODE_LDR { #12 }
+%OPCODE_STR { #13 }
+%OPCODE_LDA { #14 }
+%OPCODE_STA { #15 }
+%OPCODE_DEI { #16 }
+%OPCODE_DEO { #17 }
+%OPCODE_ADD { #18 }
+%OPCODE_SUB { #19 }
+%OPCODE_MUL { #1a }
+%OPCODE_DIV { #1b }
+%OPCODE_AND { #1c }
+%OPCODE_ORA { #1d }
+%OPCODE_EOR { #1e }
+%OPCODE_SFT { #1f }
+
+
+|0010
+@Console
+	&vector	$2
+	&read	$1
+	&_	$5
+	&write	$1
+	&error	$1
+
+|a0
+@File
+	&vector		$2
+	&success	$2
+	&stat		$2
+	&delete		$1
+	&append		$1
+	&name		$2
+	&length		$2
+	&read		$2
+	&write		$2
+
+|0100 ( entry point )
+	#0000 ;rom-offset STA2
+	#0000 ;file-name-buffer-offset STA2
+	;on-console .Console/vector DEO2
+BRK
+
+@on-console
+	( Read intput file name )
+	.Console/read DEI DUP
+	( Write file name to file-name-buffer )
+	#0a EQU ,&file-name-end JCN
+	;file-name-buffer ;file-name-buffer-offset LDA2 ADD2 STA
+	;file-name-buffer-offset LDA2 INC2 ;file-name-buffer-offset STA2
+BRK
+&file-name-end
+	POP
+	#00 ;file-name-buffer ;file-name-buffer-offset LDA2 ADD2 STA
+	;file-name-buffer .File/name DEO2
+
+@file-read-loop
+	( read an instruction )
+	.File/read DEI
+	.File/success DEI2 #0000 EQU2 ;eof JCN2
+	;instruction STA
+
+	( Set flags )
+	( TODO: Keep instruction value on stack )
+	;instruction LDA SHORT_MODE_MASK AND ;short-mode STA
+	;instruction LDA RETURN_MODE_MASK AND ;return-mode STA
+	;instruction LDA KEEP_MODE_MASK AND ;keep-mode STA
+	;instruction LDA OPCODE_MASK AND ;opcode STA
+
+	;emit-ram-offset JSR2 TAB
+
+	;opcode LDA OPCODE_LIT EQU ,&handle_lit JCN
+
+	( Print opcode name with flags )
+	#00 ;opcode LDA
+	#0003 MUL2
+	;opcode-name-table ADD2
+	( TODO: Loop? )
+	DUP2 DUP2
+	LDA EMIT
+	#0001 ADD2 LDA EMIT
+	#0002 ADD2 LDA EMIT
+
+	;keep-mode LDA #00 EQU ,&after-print-keep JCN
+		#6b EMIT
+	&after-print-keep
+
+	;return-mode LDA #00 EQU ,&after-print-return JCN
+		#72 EMIT
+	&after-print-return
+
+	;short-mode LDA #00 EQU ,&after-print-short JCN
+		#32 EMIT
+	&after-print-short
+
+	TAB
+	( TODO: Print instruction byte in parentheses )
+
+	NEWLINE
+	;rom-offset LDA2 INC2 ;rom-offset STA2
+	;file-read-loop JMP2
+
+&handle_lit
+	( TODO: Handle LIT BRK or fallback to just raw data )
+	NEWLINE
+	;rom-offset LDA2 INC2 ;rom-offset STA2
+	;file-read-loop JMP2
+@eof
+	HALT
+
+( Print address )
+@emit-ram-offset
+	#7c EMIT
+	;rom-offset LDA2 #0100 ADD2
+	;emit-short JSR2
+	( TODO Tail call )
+JMP2r
+
+( Print a number between 0 to 65535 to the screen in hexadecimal )
+@emit-short ( short -- )
+	SWP
+	;emit-byte JSR2
+	;emit-byte JSR2 ( TODO Tail call )
+JMP2r
+
+( Print a number between 0 to 255 to the screen in hexadecimal )
+@emit-byte ( byte -- )
+	DUP
+	#f0 AND #10 DIV ;emit-nibble JSR2
+	#0f AND ;emit-nibble JSR2 ( TODO Tail call )
+JMP2r
+
+( Print a number between 0 to 15 to the screen in hexadecimal )
+@emit-nibble ( byte -- )
+	#00 SWP ;hex-table ADD2 LDA EMIT
+JMP2r
+
+( TODO: Move to zero page )
+( variables )
+@rom-offset	$2
+@instruction	$1
+@opcode		$1
+@keep-mode	$1
+@short-mode	$1
+@return-mode	$1
+
+@hex-table
+"0123456789
+"abcdef
+
+@opcode-name-table
+"LIT
+"INC
+"POP
+"NIP
+"SWP
+"ROT
+"DUP
+"OVR
+"EQU
+"NEQ
+"GTH
+"LTH
+"JMP
+"JCN
+"JSR
+"STH
+"LDZ
+"STZ
+"LDR
+"STR
+"LDA
+"STA
+"DEI
+"DEO
+"ADD
+"SUB
+"MUL
+"DIV
+"AND
+"ORA
+"EOR
+"SFT
+
+@file-name-buffer-offset $2 ( TODO: $1 )
+@file-name-buffer
