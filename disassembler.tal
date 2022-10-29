@@ -101,6 +101,7 @@ BRK
 
 	;opcode LDA OPCODE_LIT NEQ ,&non-lit-opcode JCN
 		;handle-lit JSR2
+		NEWLINE
 		;file-read-loop JMP2
 	&non-lit-opcode
 
@@ -126,14 +127,7 @@ BRK
 		#32 EMIT
 	&after-print-short
 
-	TAB
-
-	( Print instruction byte in parentheses )
-	#28 EMIT
-	#20 EMIT
-	;instruction LDA ;emit-byte JSR2
-	#20 EMIT
-	#29 EMIT
+	TAB ;emit-instruction-as-comment JSR2
 
 	NEWLINE
 	;rom-offset LDA2 INC2 ;rom-offset STA2
@@ -141,12 +135,46 @@ BRK
 
 @handle-lit
 	( TODO: Handle LIT BRK or fallback to just raw data )
-	NEWLINE
+	;return-mode LDA
+	;instruction LDA #20 EQU ORA
+	;instruction LDA #40 EQU ORA
+	;instruction LDA #60 EQU ORA
+	,&emit-raw-data JCN
+
+	;keep-mode LDA #00 EQU ,&emit-brk JCN
+
+	;short-mode LDA ,&emit-short-literal JCN
+
+&emit-byte-literal
+	;rom-offset LDA2 INC2 ;rom-offset STA2
+JMP2r
+
+&emit-short-literal
+	;rom-offset LDA2 INC2 ;rom-offset STA2
+JMP2r
+
+&emit-raw-data
+	;rom-offset LDA2 INC2 ;rom-offset STA2
+JMP2r
+
+&emit-brk
+	#42 EMIT
+	#52 EMIT
+	#4b EMIT
+	TAB ;emit-instruction-as-comment JSR2
 	;rom-offset LDA2 INC2 ;rom-offset STA2
 JMP2r
 
 @eof
 	HALT
+
+@emit-instruction-as-comment
+	#28 EMIT
+	#20 EMIT
+	;instruction LDA ;emit-byte JSR2
+	#20 EMIT
+	#29 EMIT
+JMP2r
 
 ( Print address )
 @emit-ram-offset
