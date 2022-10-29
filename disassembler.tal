@@ -99,7 +99,10 @@ BRK
 
 	;emit-ram-offset JSR2 TAB
 
-	;opcode LDA OPCODE_LIT EQU ,&handle_lit JCN
+	;opcode LDA OPCODE_LIT NEQ ,&non-lit-opcode JCN
+		;handle-lit JSR2
+		;file-read-loop JMP2
+	&non-lit-opcode
 
 	( Print opcode name with flags )
 	#00 ;opcode LDA
@@ -124,17 +127,24 @@ BRK
 	&after-print-short
 
 	TAB
-	( TODO: Print instruction byte in parentheses )
+
+	( Print instruction byte in parentheses )
+	#28 EMIT
+	#20 EMIT
+	;instruction LDA ;emit-byte JSR2
+	#20 EMIT
+	#29 EMIT
 
 	NEWLINE
 	;rom-offset LDA2 INC2 ;rom-offset STA2
 	;file-read-loop JMP2
 
-&handle_lit
+@handle-lit
 	( TODO: Handle LIT BRK or fallback to just raw data )
 	NEWLINE
 	;rom-offset LDA2 INC2 ;rom-offset STA2
-	;file-read-loop JMP2
+JMP2r
+
 @eof
 	HALT
 
