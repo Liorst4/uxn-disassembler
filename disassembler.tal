@@ -64,20 +64,20 @@ BRK
 
 @file-read-loop
 	( read an instruction )
-	.File/read DEI
+	.File/read DEI DUP
 	.File/success DEI2 #0000 EQU2 ;eof JCN2
 	;instruction STA
 
-	( Set flags )
-	( TODO: Keep instruction value on stack )
-	;instruction LDA SHORT_MODE_MASK AND ;short-mode STA
-	;instruction LDA RETURN_MODE_MASK AND ;return-mode STA
-	;instruction LDA KEEP_MODE_MASK AND ;keep-mode STA
-	;instruction LDA OPCODE_MASK AND ;opcode STA
+	( Set flags, current instruction is on the stack )
+	DUP DUP DUP
+	SHORT_MODE_MASK AND ;short-mode STA
+	RETURN_MODE_MASK AND ;return-mode STA
+	KEEP_MODE_MASK AND ;keep-mode STA
+	OPCODE_MASK AND DUP ;opcode STA
 
 	;emit-ram-offset JSR2 TAB
 
-	;opcode LDA OPCODE_LIT NEQ ,&non-lit-opcode JCN
+	( opcode is on the stack ) OPCODE_LIT NEQ ,&non-lit-opcode JCN
 		;handle-lit JSR2
 		NEWLINE
 		;file-read-loop JMP2
