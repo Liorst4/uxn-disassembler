@@ -114,7 +114,7 @@ BRK
 	.ZeroPageGlobals/instruction STZ
 
 	( Set flags, current instruction is on the stack )
-	DUP DUP DUP
+	DUPk DUP
 	SHORT_MODE_MASK AND .ZeroPageGlobals/short-mode STZ
 	RETURN_MODE_MASK AND .ZeroPageGlobals/return-mode STZ
 	KEEP_MODE_MASK AND .ZeroPageGlobals/keep-mode STZ
@@ -133,10 +133,9 @@ BRK
 	#0003 MUL2
 	;opcode-name-table ADD2
 	( TODO: Loop? )
-	DUP2 DUP2
-	LDA EMIT
-	#0001 ADD2 LDA EMIT
-	#0002 ADD2 LDA EMIT
+	LDAk EMIT
+	INC2 LDAk EMIT
+	INC2 LDA EMIT
 
 	( Emit 2,k or r if the relevant flags are on )
 	.ZeroPageGlobals/short-mode LDZ #00 EQU ,&after-print-short JCN
@@ -184,7 +183,7 @@ BRK
 	SPACE
 	CLOSE_PAREN
 
-	.ZeroPageGlobals/rom-offset LDZ2 #0002 ADD2 .ZeroPageGlobals/rom-offset STZ2
+	.ZeroPageGlobals/rom-offset LDZ2 INC2 INC2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
 ( Print the instruction and the following short as a short literal. Example: `#ffff` )
@@ -252,7 +251,7 @@ JMP2r
 ( Print a number between 0 to 255 to the screen in hexadecimal )
 @emit-byte ( byte -- )
 	DUP
-	#f0 AND #10 DIV ;emit-nibble JSR2
+	#f0 AND #04 SFT ;emit-nibble JSR2
 	#0f AND ;emit-nibble JMP2
 
 ( Print a number between 0 to 15 to the screen in hexadecimal )
