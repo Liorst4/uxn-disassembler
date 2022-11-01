@@ -168,9 +168,17 @@ JMP2r
 	#23 EMIT
 	.File/read DEI ( TODO: Check for errors )
 	.File/read DEI ( TODO: Check for errors )
+	DUP2
 	;emit-short JSR2
 
-	( TODO: Print bytes as comment )
+	( Print bytes as comment )
+	TAB
+	#28 EMIT
+	#20 EMIT
+	;instruction LDA ;emit-byte JSR2
+	;emit-short JSR2
+	#20 EMIT
+	#29 EMIT
 
 	;rom-offset LDA2 #0003 ADD2 ;rom-offset STA2
 JMP2r
