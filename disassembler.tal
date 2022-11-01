@@ -12,37 +12,6 @@
 %HALT { #010f DEO }
 
 %OPCODE_LIT { #00 }
-%OPCODE_INC { #01 }
-%OPCODE_POP { #02 }
-%OPCODE_NIP { #03 }
-%OPCODE_SWP { #04 }
-%OPCODE_ROT { #05 }
-%OPCODE_DUP { #06 }
-%OPCODE_OVR { #07 }
-%OPCODE_EQU { #08 }
-%OPCODE_NEQ { #09 }
-%OPCODE_GTH { #0a }
-%OPCODE_LTH { #0b }
-%OPCODE_JMP { #0c }
-%OPCODE_JCN { #0d }
-%OPCODE_JSR { #0e }
-%OPCODE_STH { #0f }
-%OPCODE_LDZ { #10 }
-%OPCODE_STZ { #11 }
-%OPCODE_LDR { #12 }
-%OPCODE_STR { #13 }
-%OPCODE_LDA { #14 }
-%OPCODE_STA { #15 }
-%OPCODE_DEI { #16 }
-%OPCODE_DEO { #17 }
-%OPCODE_ADD { #18 }
-%OPCODE_SUB { #19 }
-%OPCODE_MUL { #1a }
-%OPCODE_DIV { #1b }
-%OPCODE_AND { #1c }
-%OPCODE_ORA { #1d }
-%OPCODE_EOR { #1e }
-%OPCODE_SFT { #1f }
 
 
 |0010
