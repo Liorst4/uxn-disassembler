@@ -65,8 +65,8 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
 
         if opcode == OpCode.LIT:
             if return_mode or instruction in (0x20, 0x40, 0x60):
-                line += f'{uxn_byte_literal(rom[i])}{uxn_byte_literal(rom[i+1])}'
-                i += 2
+                line += f'{uxn_byte_literal(rom[i])}'
+                i += 1
             elif not keep_mode:
                 line += f'BRK\t( {uxn_byte_literal(rom[i])} )'
                 i += 1
