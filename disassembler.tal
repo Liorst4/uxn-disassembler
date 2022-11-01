@@ -31,7 +31,7 @@
 	&write	$1
 	&error	$1
 
-|a0
+|00a0
 @File
 	&vector		$2
 	&success	$2
