@@ -59,7 +59,9 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
         keep_mode = bool(instruction & ModeMask.KEEP_MODE_MASK)
         short_mode = bool(instruction & ModeMask.SHORT_MODE_MASK)
         return_mode = bool(instruction & ModeMask.RETURN_MODE_MASK)
-        opcode = OpCode(instruction & ~(ModeMask.KEEP_MODE_MASK | ModeMask.SHORT_MODE_MASK | ModeMask.RETURN_MODE_MASK))
+        opcode = OpCode(instruction & ~(ModeMask.KEEP_MODE_MASK |
+                                        ModeMask.SHORT_MODE_MASK |
+                                        ModeMask.RETURN_MODE_MASK))
 
         line = f'|{uxn_short_literal(i+0x100)}\t'
 
@@ -75,17 +77,28 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
                     line += f'{uxn_byte_literal(rom[i])}'
                     i += 1
                 elif i + 2 >= len(rom):
-                    line += f'{uxn_byte_literal(rom[i])}{uxn_byte_literal(rom[i+1])}'
+                    line += f'{uxn_byte_literal(rom[i])}'
+                    line += f'{uxn_byte_literal(rom[i+1])}'
                     i += 2
                 else:
-                    line += f'#{uxn_byte_literal(rom[i+1])}{uxn_byte_literal(rom[i+2])}\t( {uxn_byte_literal(instruction)}{uxn_byte_literal(rom[i+1])}{uxn_byte_literal(rom[i+2])} )'
+                    line += f'#{uxn_byte_literal(rom[i+1])}'
+                    line += f'{uxn_byte_literal(rom[i+2])}'
+                    line += '\t( '
+                    line += f'{uxn_byte_literal(instruction)}'
+                    line += f'{uxn_byte_literal(rom[i+1])}'
+                    line += f'{uxn_byte_literal(rom[i+2])}'
+                    line += ' )'
                     i += 3
             else:
                 if i + 1 >= len(rom):
                     line += f'{uxn_byte_literal(rom[i])}'
                     i += 1
                 else:
-                    line += f'#{uxn_byte_literal(rom[i+1])}\t( {uxn_byte_literal(instruction)}{uxn_byte_literal(rom[i+1])} )'
+                    line += f'#{uxn_byte_literal(rom[i+1])}'
+                    line += '\t( '
+                    line += f'{uxn_byte_literal(instruction)}'
+                    line += f'{uxn_byte_literal(rom[i+1])}'
+                    line += ' )'
                     i += 2
 
             yield line
