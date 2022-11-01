@@ -153,7 +153,7 @@ JMP2r
 JMP2r
 
 @emit-raw-byte
-	;instruction LDA2 ;emit-byte JSR2
+	;instruction LDA ;emit-byte JSR2
 	;rom-offset LDA2 INC2 ;rom-offset STA2
 JMP2r
 
