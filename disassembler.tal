@@ -139,14 +139,14 @@ BRK
 	;instruction LDA #20 EQU ORA
 	;instruction LDA #40 EQU ORA
 	;instruction LDA #60 EQU ORA
-	,&emit-raw-byte JCN
+	;emit-raw-byte JCN2
 
-	;keep-mode LDA #00 EQU ,&emit-brk JCN
+	;keep-mode LDA #00 EQU ;emit-brk JCN2
 
 	;short-mode LDA ,&emit-short-literal JCN
 
 &emit-byte-literal
-	;rom-offset LDA2 .File/length DEI2 EQU2 ,&emit-raw-byte JCN
+	;rom-offset LDA2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
 	#23 EMIT
 	.File/read DEI DUP ( TODO: Check for errors )
 	;emit-byte JSR2
@@ -164,18 +164,22 @@ BRK
 JMP2r
 
 &emit-short-literal
+	;rom-offset LDA2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
+	#23 EMIT
+	.File/read DEI ( TODO: Check for errors )
+	.File/read DEI ( TODO: Check for errors )
+	;emit-short JSR2
+
+	( TODO: Print bytes as comment )
+
+	;rom-offset LDA2 #0003 ADD2 ;rom-offset STA2
+JMP2r
+
+@emit-raw-byte
 	;rom-offset LDA2 INC2 ;rom-offset STA2
 JMP2r
 
-&emit-raw-byte
-	;rom-offset LDA2 INC2 ;rom-offset STA2
-JMP2r
-
-&emit-raw-short
-	;rom-offset LDA2 INC2 ;rom-offset STA2
-JMP2r
-
-&emit-brk
+@emit-brk
 	#42 EMIT
 	#52 EMIT
 	#4b EMIT
