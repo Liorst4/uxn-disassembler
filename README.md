@@ -52,3 +52,8 @@ patching a disassembled rom.
     |0117	DUP	( 06 )
     |0118	#0a	( 800a )
     |011a	EQU	( 08 )
+
+## License
+
+This repository uses the MIT license.
+More info in the LICENSE file.
