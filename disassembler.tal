@@ -9,10 +9,19 @@
 %NEWLINE { #0a EMIT }
 %TAB { #09 EMIT }
 
-%HALT { #010f DEO }
-
 %OPCODE_LIT { #00 }
 
+|0000
+@System
+	&vector	$2
+	&wst	$1
+	&rst	$1
+	&_	$4
+	&red	$2
+	&green	$2
+	&blue	$2
+	&debug	$1
+	&state	$1
 
 |0010
 @Console
@@ -166,7 +175,8 @@ JMP2r
 JMP2r
 
 @eof
-	HALT
+	#01 .System/state DEO
+	BRK ( Exit evaluation context so the state change will take effect )
 
 @emit-instruction-as-comment
 	#28 EMIT
