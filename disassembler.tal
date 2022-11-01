@@ -62,8 +62,13 @@
 	;on-console .Console/vector DEO2
 BRK
 
-@on-console
-	( Read intput file name )
+( Called when a console event occurs, handles only input events )
+@on-console ( -- )
+	(
+		Read intput file name.
+		The cli arguments are injected to the console device
+		by the emulator, ending with a newline character.
+	)
 	.Console/read DEI DUP
 	( Write file name to file-name-buffer )
 	#0a EQU ,&file-name-end JCN
@@ -71,11 +76,15 @@ BRK
 	;file-name-buffer-offset LDA2 INC2 ;file-name-buffer-offset STA2
 BRK
 &file-name-end
+	(
+		The cli argument was loaded.
+		Setup the file device for reading.
+	)
 	POP
 	#00 ;file-name-buffer ;file-name-buffer-offset LDA2 ADD2 STA
 	;file-name-buffer .File/name DEO2
 
-@file-read-loop
+@file-read-loop ( -- )
 	( read an instruction )
 	.File/read DEI DUP
 	.File/success DEI2 #0000 EQU2 ;eof JCN2
@@ -96,7 +105,7 @@ BRK
 		;file-read-loop JMP2
 	&non-lit-opcode
 
-	( Print opcode name with flags )
+	( Print opcode name )
 	#00 .ZeroPageGlobals/opcode LDZ
 	#0003 MUL2
 	;opcode-name-table ADD2
@@ -106,14 +115,13 @@ BRK
 	#0001 ADD2 LDA EMIT
 	#0002 ADD2 LDA EMIT
 
+	( Emit 2,k or r if the relevant flags are on )
 	.ZeroPageGlobals/short-mode LDZ #00 EQU ,&after-print-short JCN
 		LIT "2 EMIT
 	&after-print-short
-
 	.ZeroPageGlobals/keep-mode LDZ #00 EQU ,&after-print-keep JCN
 		LIT "k EMIT
 	&after-print-keep
-
 	.ZeroPageGlobals/return-mode LDZ #00 EQU ,&after-print-return JCN
 		LIT "r EMIT
 	&after-print-return
@@ -125,7 +133,7 @@ BRK
 	;file-read-loop JMP2
 
 ( Handle LIT BRK or fallback to just raw data )
-@handle-lit
+@handle-lit ( -- )
 	.ZeroPageGlobals/return-mode LDZ
 	( TODO: Use stack instead of re-reading the variable )
 	.ZeroPageGlobals/instruction LDZ #20 EQU ORA
@@ -137,6 +145,7 @@ BRK
 
 	.ZeroPageGlobals/short-mode LDZ ,&emit-short-literal JCN
 
+( Print the instruction and the following byte as a byte literal. Example: `#ff` )
 &emit-byte-literal
 	.ZeroPageGlobals/rom-offset LDZ2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
 	LIT "# EMIT
@@ -155,6 +164,7 @@ BRK
 	.ZeroPageGlobals/rom-offset LDZ2 #0002 ADD2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
+( Print the instruction and the following short as a short literal. Example: `#ffff` )
 &emit-short-literal
 	.ZeroPageGlobals/rom-offset LDZ2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
 	LIT "# EMIT
@@ -175,12 +185,14 @@ JMP2r
 	.ZeroPageGlobals/rom-offset LDZ2 #0003 ADD2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
-@emit-raw-byte
+( Print the instruction as raw data. Example: `ff` )
+@emit-raw-byte ( -- )
 	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
 	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
-@emit-brk
+( Print the BRK instruction )
+@emit-brk ( -- )
 	LIT "B EMIT
 	LIT "R EMIT
 	LIT "K EMIT
@@ -188,10 +200,12 @@ JMP2r
 	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
+( Halt the program )
 @eof
 	#01 .System/state DEO
 	BRK ( Exit evaluation context so the state change will take effect )
 
+( Print .Zeropageglobals/instruction's value as a comment )
 @emit-instruction-as-comment
 	OPEN_PAREN
 	SPACE
