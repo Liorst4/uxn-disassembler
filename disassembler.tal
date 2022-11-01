@@ -190,23 +190,19 @@ JMP2r
 @emit-ram-offset
 	#7c EMIT
 	;rom-offset LDA2 #0100 ADD2
-	;emit-short JSR2
-	( TODO Tail call )
-JMP2r
+	;emit-short JMP2
 
 ( Print a number between 0 to 65535 to the screen in hexadecimal )
 @emit-short ( short -- )
 	SWP
 	;emit-byte JSR2
-	;emit-byte JSR2 ( TODO Tail call )
-JMP2r
+	;emit-byte JMP2
 
 ( Print a number between 0 to 255 to the screen in hexadecimal )
 @emit-byte ( byte -- )
 	DUP
 	#f0 AND #10 DIV ;emit-nibble JSR2
-	#0f AND ;emit-nibble JSR2 ( TODO Tail call )
-JMP2r
+	#0f AND ;emit-nibble JMP2
 
 ( Print a number between 0 to 15 to the screen in hexadecimal )
 @emit-nibble ( byte -- )
