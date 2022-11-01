@@ -43,8 +43,18 @@
 	&read		$2
 	&write		$2
 
+( Zero page variables )
+|0000
+@ZeroPageGlobals
+	&rom-offset	$2
+	&instruction	$1
+	&opcode		$1
+	&keep-mode	$1
+	&short-mode	$1
+	&return-mode	$1
+
 |0100 ( entry point )
-	#0000 ;rom-offset STA2
+	#0000 .ZeroPageGlobals/rom-offset STZ2
 	#0000 ;file-name-buffer-offset STA2
 	;on-console .Console/vector DEO2
 BRK
@@ -66,14 +76,14 @@ BRK
 	( read an instruction )
 	.File/read DEI DUP
 	.File/success DEI2 #0000 EQU2 ;eof JCN2
-	;instruction STA
+	.ZeroPageGlobals/instruction STZ
 
 	( Set flags, current instruction is on the stack )
 	DUP DUP DUP
-	SHORT_MODE_MASK AND ;short-mode STA
-	RETURN_MODE_MASK AND ;return-mode STA
-	KEEP_MODE_MASK AND ;keep-mode STA
-	OPCODE_MASK AND DUP ;opcode STA
+	SHORT_MODE_MASK AND .ZeroPageGlobals/short-mode STZ
+	RETURN_MODE_MASK AND .ZeroPageGlobals/return-mode STZ
+	KEEP_MODE_MASK AND .ZeroPageGlobals/keep-mode STZ
+	OPCODE_MASK AND DUP .ZeroPageGlobals/opcode STZ
 
 	;emit-ram-offset JSR2 TAB
 
@@ -84,7 +94,7 @@ BRK
 	&non-lit-opcode
 
 	( Print opcode name with flags )
-	#00 ;opcode LDA
+	#00 .ZeroPageGlobals/opcode LDZ
 	#0003 MUL2
 	;opcode-name-table ADD2
 	( TODO: Loop? )
@@ -93,38 +103,39 @@ BRK
 	#0001 ADD2 LDA EMIT
 	#0002 ADD2 LDA EMIT
 
-	;short-mode LDA #00 EQU ,&after-print-short JCN
+	.ZeroPageGlobals/short-mode LDZ #00 EQU ,&after-print-short JCN
 		#32 EMIT
 	&after-print-short
 
-	;keep-mode LDA #00 EQU ,&after-print-keep JCN
+	.ZeroPageGlobals/keep-mode LDZ #00 EQU ,&after-print-keep JCN
 		#6b EMIT
 	&after-print-keep
 
-	;return-mode LDA #00 EQU ,&after-print-return JCN
+	.ZeroPageGlobals/return-mode LDZ #00 EQU ,&after-print-return JCN
 		#72 EMIT
 	&after-print-return
 
 	TAB ;emit-instruction-as-comment JSR2
 
 	NEWLINE
-	;rom-offset LDA2 INC2 ;rom-offset STA2
+	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
 	;file-read-loop JMP2
 
 ( Handle LIT BRK or fallback to just raw data )
 @handle-lit
-	;return-mode LDA
-	;instruction LDA #20 EQU ORA
-	;instruction LDA #40 EQU ORA
-	;instruction LDA #60 EQU ORA
+	.ZeroPageGlobals/return-mode LDZ
+	( TODO: Use stack instead of re-reading the variable )
+	.ZeroPageGlobals/instruction LDZ #20 EQU ORA
+	.ZeroPageGlobals/instruction LDZ #40 EQU ORA
+	.ZeroPageGlobals/instruction LDZ #60 EQU ORA
 	;emit-raw-byte JCN2
 
-	;keep-mode LDA #00 EQU ;emit-brk JCN2
+	.ZeroPageGlobals/keep-mode LDZ #00 EQU ;emit-brk JCN2
 
-	;short-mode LDA ,&emit-short-literal JCN
+	.ZeroPageGlobals/short-mode LDZ ,&emit-short-literal JCN
 
 &emit-byte-literal
-	;rom-offset LDA2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
+	.ZeroPageGlobals/rom-offset LDZ2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
 	#23 EMIT
 	.File/read DEI DUP ( TODO: Check for errors )
 	;emit-byte JSR2
@@ -133,16 +144,16 @@ BRK
 	TAB
 	#28 EMIT
 	#20 EMIT
-	;instruction LDA ;emit-byte JSR2
+	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
 	;emit-byte JSR2
 	#20 EMIT
 	#29 EMIT
 
-	;rom-offset LDA2 #0002 ADD2 ;rom-offset STA2
+	.ZeroPageGlobals/rom-offset LDZ2 #0002 ADD2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
 &emit-short-literal
-	;rom-offset LDA2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
+	.ZeroPageGlobals/rom-offset LDZ2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
 	#23 EMIT
 	.File/read DEI ( TODO: Check for errors )
 	.File/read DEI ( TODO: Check for errors )
@@ -153,17 +164,17 @@ JMP2r
 	TAB
 	#28 EMIT
 	#20 EMIT
-	;instruction LDA ;emit-byte JSR2
+	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
 	;emit-short JSR2
 	#20 EMIT
 	#29 EMIT
 
-	;rom-offset LDA2 #0003 ADD2 ;rom-offset STA2
+	.ZeroPageGlobals/rom-offset LDZ2 #0003 ADD2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
 @emit-raw-byte
-	;instruction LDA ;emit-byte JSR2
-	;rom-offset LDA2 INC2 ;rom-offset STA2
+	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
+	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
 @emit-brk
@@ -171,7 +182,7 @@ JMP2r
 	#52 EMIT
 	#4b EMIT
 	TAB ;emit-instruction-as-comment JSR2
-	;rom-offset LDA2 INC2 ;rom-offset STA2
+	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 
 @eof
@@ -181,7 +192,7 @@ JMP2r
 @emit-instruction-as-comment
 	#28 EMIT
 	#20 EMIT
-	;instruction LDA ;emit-byte JSR2
+	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
 	#20 EMIT
 	#29 EMIT
 JMP2r
@@ -189,7 +200,7 @@ JMP2r
 ( Print address )
 @emit-ram-offset
 	#7c EMIT
-	;rom-offset LDA2 #0100 ADD2
+	.ZeroPageGlobals/rom-offset LDZ2 #0100 ADD2
 	;emit-short JMP2
 
 ( Print a number between 0 to 65535 to the screen in hexadecimal )
@@ -208,15 +219,6 @@ JMP2r
 @emit-nibble ( byte -- )
 	#00 SWP ;hex-table ADD2 LDA EMIT
 JMP2r
-
-( TODO: Move to zero page )
-( variables )
-@rom-offset	$2
-@instruction	$1
-@opcode		$1
-@keep-mode	$1
-@short-mode	$1
-@return-mode	$1
 
 @hex-table
 "0123456789
