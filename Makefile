@@ -10,6 +10,12 @@ disassembler.rom: disassembler.tal
 test: tests.sh disassembler.rom uxn_disassembler.py
 	./tests.sh
 
+.PHONY: lint
+lint: tests.sh uxn_disassembler.py
+	shellcheck tests.sh
+	mypy uxn_disassembler.py
+	pylint uxn_disassembler.py
+
 .PHONY: clean
 clean:
 	rm -f *.rom
