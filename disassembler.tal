@@ -111,8 +111,8 @@ BRK
 	;rom-offset LDA2 INC2 ;rom-offset STA2
 	;file-read-loop JMP2
 
+( Handle LIT BRK or fallback to just raw data )
 @handle-lit
-	( TODO: Handle LIT BRK or fallback to just raw data )
 	;return-mode LDA
 	;instruction LDA #20 EQU ORA
 	;instruction LDA #40 EQU ORA
