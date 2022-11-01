@@ -5,7 +5,7 @@
 %KEEP_MODE_MASK { #80 }
 %OPCODE_MASK { #1f }
 
-%EMIT { #18 DEO }
+%EMIT { .Console/write DEO }
 %NEWLINE { #0a EMIT }
 %TAB { #09 EMIT }
 %SPACE { #20 EMIT }
