@@ -119,13 +119,13 @@ BRK
 		#6b EMIT
 	&after-print-keep
 
-	;return-mode LDA #00 EQU ,&after-print-return JCN
-		#72 EMIT
-	&after-print-return
-
 	;short-mode LDA #00 EQU ,&after-print-short JCN
 		#32 EMIT
 	&after-print-short
+
+	;return-mode LDA #00 EQU ,&after-print-return JCN
+		#72 EMIT
+	&after-print-return
 
 	TAB ;emit-instruction-as-comment JSR2
 
