@@ -50,7 +50,7 @@ def uxn_byte_literal(number: int) -> str:
     return text
 
 def uxn_short_literal(number: int) -> str:
-    return '{:04x}'.format(number)
+    return f'{number:04x}'
 
 def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
     i = 0
