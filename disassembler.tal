@@ -84,13 +84,13 @@ BRK
 	#0001 ADD2 LDA EMIT
 	#0002 ADD2 LDA EMIT
 
-	;keep-mode LDA #00 EQU ,&after-print-keep JCN
-		#6b EMIT
-	&after-print-keep
-
 	;short-mode LDA #00 EQU ,&after-print-short JCN
 		#32 EMIT
 	&after-print-short
+
+	;keep-mode LDA #00 EQU ,&after-print-keep JCN
+		#6b EMIT
+	&after-print-keep
 
 	;return-mode LDA #00 EQU ,&after-print-return JCN
 		#72 EMIT
