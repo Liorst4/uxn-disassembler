@@ -6,7 +6,7 @@ A simple program to translate [UXN](https://wiki.xxiivv.com/site/uxn.html) roms 
 Disassembled files can be re-assembled into UXN roms using
 the [UXN assembler](https://git.sr.ht/~rabbits/uxn/tree/main/item/src/uxnasm.c).
 
-A python version of the disassembler is kept for testing to reference.
+A python version of the disassembler is kept for testing and reference.
 
 ## Usage
 
@@ -16,7 +16,7 @@ A python version of the disassembler is kept for testing to reference.
 ## Notes and limitations
 
 UXN reads roms as a raw binary blob, unlike ELF or PE, there
-are not sections to distinguish between code and data, thus
+are no sections to distinguish between code and data, thus
 all data given to the disassembler is assumed to be code.
 
 
