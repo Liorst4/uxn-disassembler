@@ -11,7 +11,7 @@ A python version of the disassembler is kept for testing to reference.
 ## Usage
 
     $EMU ./disassembler.rom $ROM_TO_DISASSEMBLE > $OUTPUT
-	cat $ROM_TO_DISASSEMBLE > ./uxn_disassembler.py
+    ./uxn_disassembler.py < $ROM_TO_DISASSEMBLE > $OUTPUT
 
 ## Notes and limitations
 
