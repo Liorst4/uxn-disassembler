@@ -21,6 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import argparse
 import enum
 import sys
 import typing
@@ -142,7 +143,14 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
         i += 1
 
 if __name__ == '__main__':
-    rom = sys.stdin.buffer.read()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input', type=argparse.FileType('rb'), default=sys.stdin.buffer)
+    parser.add_argument('--output', type=argparse.FileType('w'), default=sys.stdout)
+    args = parser.parse_args()
+
+    rom = args.input.read()
     for line in disassemble(rom):
-        print(line)
+        args.output.write(line)
+        args.output.write('\n')
+
     sys.exit(0)
