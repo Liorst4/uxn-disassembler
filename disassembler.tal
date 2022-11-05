@@ -156,10 +156,15 @@ BRK
 ( Handle LIT BRK or fallback to just raw data )
 @handle-lit ( -- )
 	.ZeroPageGlobals/return-mode LDZ
-	( TODO: Use stack instead of re-reading the variable )
-	.ZeroPageGlobals/instruction LDZ #20 EQU ORA
-	.ZeroPageGlobals/instruction LDZ #40 EQU ORA
-	.ZeroPageGlobals/instruction LDZ #60 EQU ORA
+
+	( Instruction is 0x20, 0x40 or 0x60 )
+	.ZeroPageGlobals/instruction LDZ
+	DUP #20 EQU 	( instruction )
+	OVR #40 EQU ORA	( instruction instruction==0x20 )
+	SWP #60 EQU ORA ( instruction instruction==0x20|instruction==0x40 )
+			( instruction==0x20|instruction==0x40|instruction==0x60 )
+
+	ORA
 	;emit-raw-byte JCN2
 
 	.ZeroPageGlobals/keep-mode LDZ #00 EQU ;emit-brk JCN2
