@@ -132,7 +132,6 @@ BRK
 	#00 .ZeroPageGlobals/opcode LDZ
 	#0003 MUL2
 	;opcode-name-table ADD2
-	( TODO: Loop? )
 	LDAk EMIT
 	INC2 LDAk EMIT
 	INC2 LDA EMIT
