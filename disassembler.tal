@@ -71,16 +71,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ( Zero page variables )
 |0000
-@ZeroPageGlobals
-	&rom-offset	$2
-	&instruction	$1
-	&opcode		$1
-	&keep-mode	$1
-	&short-mode	$1
-	&return-mode	$1
+@rom-offset	$2
+@instruction	$1
+@opcode		$1
+@keep-mode	$1
+@short-mode	$1
+@return-mode	$1
 
 |0100 ( entry point )
-	#0000 .ZeroPageGlobals/rom-offset STZ2
+	#0000 .rom-offset STZ2
 	#0000 ;file-name-buffer-offset STA2
 	;on-console .Console/vector DEO2
 BRK
@@ -111,14 +110,14 @@ BRK
 	( read an instruction )
 	.File/read DEI DUP
 	.File/success DEI2 #0000 EQU2 ;eof JCN2
-	.ZeroPageGlobals/instruction STZ
+	.instruction STZ
 
 	( Set flags, current instruction is on the stack )
 	DUPk DUP
-	SHORT_MODE_MASK AND .ZeroPageGlobals/short-mode STZ
-	RETURN_MODE_MASK AND .ZeroPageGlobals/return-mode STZ
-	KEEP_MODE_MASK AND .ZeroPageGlobals/keep-mode STZ
-	OPCODE_MASK AND DUP .ZeroPageGlobals/opcode STZ
+	SHORT_MODE_MASK AND .short-mode STZ
+	RETURN_MODE_MASK AND .return-mode STZ
+	KEEP_MODE_MASK AND .keep-mode STZ
+	OPCODE_MASK AND DUP .opcode STZ
 
 	;emit-ram-offset JSR2 TAB
 
@@ -129,7 +128,7 @@ BRK
 	&non-lit-opcode
 
 	( Print opcode name )
-	#00 .ZeroPageGlobals/opcode LDZ
+	#00 .opcode LDZ
 	#0003 MUL2
 	;opcode-name-table ADD2
 	LDAk EMIT
@@ -137,32 +136,32 @@ BRK
 	INC2 LDA EMIT
 
 	( Emit 2,k or r if the relevant flags are on )
-	.ZeroPageGlobals/short-mode LDZ #00 EQU ,&after-print-short JCN
+	.short-mode LDZ #00 EQU ,&after-print-short JCN
 		LIT "2 EMIT
 	&after-print-short
-	.ZeroPageGlobals/keep-mode LDZ #00 EQU ,&after-print-keep JCN
+	.keep-mode LDZ #00 EQU ,&after-print-keep JCN
 		LIT "k EMIT
 	&after-print-keep
-	.ZeroPageGlobals/return-mode LDZ #00 EQU ,&after-print-return JCN
+	.return-mode LDZ #00 EQU ,&after-print-return JCN
 		LIT "r EMIT
 	&after-print-return
 
 	TAB TAB ;emit-instruction-as-comment JSR2
 
 	NEWLINE
-	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
+	.rom-offset LDZ2 INC2 .rom-offset STZ2
 	;file-read-loop JMP2
 
 ( Emit # when the keep flag is on, emit LIT when the return flag is on )
 @emit-lit-prefix ( -- )
-	.ZeroPageGlobals/return-mode LDZ ,&emit-litr-prefix JCN
+	.return-mode LDZ ,&emit-litr-prefix JCN
 	LIT "# EMIT
 JMP2r
 &emit-litr-prefix
 	LIT "L EMIT
 	LIT "I EMIT
 	LIT "T EMIT
-	.ZeroPageGlobals/short-mode LDZ ,&emit-lit-2r-prefix JCN
+	.short-mode LDZ ,&emit-lit-2r-prefix JCN
 	,&emit-litr-end JMP
 &emit-lit-2r-prefix
 	LIT "2 EMIT
@@ -173,8 +172,8 @@ JMP2r
 
 ( Emit \t when the keep flag is on, nothing when the short and return flags are on )
 @emit-lit-postfix ( -- )
-	.ZeroPageGlobals/return-mode LDZ RETURN_MODE_MASK EQU
-	.ZeroPageGlobals/short-mode LDZ SHORT_MODE_MASK EQU
+	.return-mode LDZ RETURN_MODE_MASK EQU
+	.short-mode LDZ SHORT_MODE_MASK EQU
 	AND ,&emit-lit-postfix-end JCN
 	TAB
 &emit-lit-postfix-end
@@ -183,20 +182,20 @@ JMP2r
 ( Handle LIT BRK or fallback to just raw data )
 @handle-lit ( -- )
 	( Instruction is 0x20, 0x40 or 0x60 )
-	.ZeroPageGlobals/instruction LDZ
+	.instruction LDZ
 	DUP #20 EQU 	( instruction )
 	OVR #40 EQU ORA	( instruction instruction==0x20 )
 	SWP #60 EQU ORA ( instruction instruction==0x20|instruction==0x40 )
 			( instruction==0x20|instruction==0x40|instruction==0x60 )
 	;emit-raw-byte JCN2
 
-	.ZeroPageGlobals/keep-mode LDZ #00 EQU ;emit-brk JCN2
+	.keep-mode LDZ #00 EQU ;emit-brk JCN2
 
-	.ZeroPageGlobals/short-mode LDZ ,&emit-short-literal JCN
+	.short-mode LDZ ,&emit-short-literal JCN
 
 ( Print the instruction and the following byte as a byte literal. Example: `#ff` )
 &emit-byte-literal
-	.ZeroPageGlobals/rom-offset LDZ2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
+	.rom-offset LDZ2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
 	.File/read DEI DUP ( TODO: Check for errors )
 	;emit-lit-prefix JSR2
 	;emit-byte JSR2
@@ -206,17 +205,17 @@ JMP2r
 	TAB
 	OPEN_PAREN
 	SPACE
-	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
+	.instruction LDZ ;emit-byte JSR2
 	;emit-byte JSR2
 	SPACE
 	CLOSE_PAREN
 
-	.ZeroPageGlobals/rom-offset LDZ2 INC2 INC2 .ZeroPageGlobals/rom-offset STZ2
+	.rom-offset LDZ2 INC2 INC2 .rom-offset STZ2
 JMP2r
 
 ( Print the instruction and the following short as a short literal. Example: `#ffff` )
 &emit-short-literal
-	.ZeroPageGlobals/rom-offset LDZ2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
+	.rom-offset LDZ2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
 	.File/read DEI ( TODO: Check for errors )
 	.File/read DEI ( TODO: Check for errors )
 	;emit-lit-prefix JSR2
@@ -228,18 +227,18 @@ JMP2r
 	TAB
 	OPEN_PAREN
 	SPACE
-	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
+	.instruction LDZ ;emit-byte JSR2
 	;emit-short JSR2
 	SPACE
 	CLOSE_PAREN
 
-	.ZeroPageGlobals/rom-offset LDZ2 #0003 ADD2 .ZeroPageGlobals/rom-offset STZ2
+	.rom-offset LDZ2 #0003 ADD2 .rom-offset STZ2
 JMP2r
 
 ( Print the instruction as raw data. Example: `ff` )
 @emit-raw-byte ( -- )
-	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
-	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
+	.instruction LDZ ;emit-byte JSR2
+	.rom-offset LDZ2 INC2 .rom-offset STZ2
 JMP2r
 
 ( Print the BRK instruction )
@@ -248,7 +247,7 @@ JMP2r
 	LIT "R EMIT
 	LIT "K EMIT
 	TAB TAB ;emit-instruction-as-comment JSR2
-	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
+	.rom-offset LDZ2 INC2 .rom-offset STZ2
 JMP2r
 
 ( Halt the program )
@@ -256,11 +255,11 @@ JMP2r
 	#01 .System/state DEO
 	BRK ( Exit evaluation context so the state change will take effect )
 
-( Print .Zeropageglobals/instruction's value as a comment )
+( Print .instruction's value as a comment )
 @emit-instruction-as-comment
 	OPEN_PAREN
 	SPACE
-	.ZeroPageGlobals/instruction LDZ ;emit-byte JSR2
+	.instruction LDZ ;emit-byte JSR2
 	SPACE
 	CLOSE_PAREN
 JMP2r
@@ -268,7 +267,7 @@ JMP2r
 ( Print address )
 @emit-ram-offset
 	LIT "| EMIT
-	.ZeroPageGlobals/rom-offset LDZ2 #0100 ADD2
+	.rom-offset LDZ2 #0100 ADD2
 	;emit-short JMP2
 
 ( Print a number between 0 to 65535 to the screen in hexadecimal )
