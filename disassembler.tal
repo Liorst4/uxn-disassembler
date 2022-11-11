@@ -147,24 +147,47 @@ BRK
 		LIT "r EMIT
 	&after-print-return
 
-	TAB ;emit-instruction-as-comment JSR2
+	TAB TAB ;emit-instruction-as-comment JSR2
 
 	NEWLINE
 	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
 	;file-read-loop JMP2
 
+( Emit # when the keep flag is on, emit LIT when the return flag is on )
+@emit-lit-prefix ( -- )
+	.ZeroPageGlobals/return-mode LDZ ,&emit-litr-prefix JCN
+	LIT "# EMIT
+JMP2r
+&emit-litr-prefix
+	LIT "L EMIT
+	LIT "I EMIT
+	LIT "T EMIT
+	.ZeroPageGlobals/short-mode LDZ ,&emit-lit-2r-prefix JCN
+	,&emit-litr-end JMP
+&emit-lit-2r-prefix
+	LIT "2 EMIT
+&emit-litr-end
+	LIT "r EMIT
+	SPACE
+JMP2r
+
+( Emit \t when the keep flag is on, nothing when the short and return flags are on )
+@emit-lit-postfix ( -- )
+	.ZeroPageGlobals/return-mode LDZ RETURN_MODE_MASK EQU
+	.ZeroPageGlobals/short-mode LDZ SHORT_MODE_MASK EQU
+	AND ,&emit-lit-postfix-end JCN
+	TAB
+&emit-lit-postfix-end
+JMP2r
+
 ( Handle LIT BRK or fallback to just raw data )
 @handle-lit ( -- )
-	.ZeroPageGlobals/return-mode LDZ ( TODO: Print LITr/LIT2r )
-
 	( Instruction is 0x20, 0x40 or 0x60 )
 	.ZeroPageGlobals/instruction LDZ
 	DUP #20 EQU 	( instruction )
 	OVR #40 EQU ORA	( instruction instruction==0x20 )
 	SWP #60 EQU ORA ( instruction instruction==0x20|instruction==0x40 )
 			( instruction==0x20|instruction==0x40|instruction==0x60 )
-
-	ORA
 	;emit-raw-byte JCN2
 
 	.ZeroPageGlobals/keep-mode LDZ #00 EQU ;emit-brk JCN2
@@ -174,9 +197,10 @@ BRK
 ( Print the instruction and the following byte as a byte literal. Example: `#ff` )
 &emit-byte-literal
 	.ZeroPageGlobals/rom-offset LDZ2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
-	LIT "# EMIT
 	.File/read DEI DUP ( TODO: Check for errors )
+	;emit-lit-prefix JSR2
 	;emit-byte JSR2
+	;emit-lit-postfix JSR2
 
 	( Print bytes as comment )
 	TAB
@@ -193,11 +217,12 @@ JMP2r
 ( Print the instruction and the following short as a short literal. Example: `#ffff` )
 &emit-short-literal
 	.ZeroPageGlobals/rom-offset LDZ2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
-	LIT "# EMIT
 	.File/read DEI ( TODO: Check for errors )
 	.File/read DEI ( TODO: Check for errors )
+	;emit-lit-prefix JSR2
 	DUP2
 	;emit-short JSR2
+	;emit-lit-postfix JSR2
 
 	( Print bytes as comment )
 	TAB
@@ -222,7 +247,7 @@ JMP2r
 	LIT "B EMIT
 	LIT "R EMIT
 	LIT "K EMIT
-	TAB ;emit-instruction-as-comment JSR2
+	TAB TAB ;emit-instruction-as-comment JSR2
 	.ZeroPageGlobals/rom-offset LDZ2 INC2 .ZeroPageGlobals/rom-offset STZ2
 JMP2r
 

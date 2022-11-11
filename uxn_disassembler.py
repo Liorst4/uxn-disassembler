@@ -84,17 +84,25 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
                 line += 'k'
             if return_mode:
                 line += 'r'
-            line += f'\t( {instruction:02x} )'
+            line += f'\t\t( {instruction:02x} )'
             yield line
             i += 1
             continue
 
+        lit_prefix = '#'
+        lit_postfix = '\t'
+        if return_mode:
+            lit_prefix = 'LIT'
+            if short_mode:
+                lit_prefix += '2'
+                lit_postfix = ''
+            lit_prefix += 'r '
+
         if not keep_mode and not return_mode and not short_mode:
-            line += f'BRK\t( {rom[i]:02x} )'
+            line += f'BRK\t\t( {rom[i]:02x} )'
             i += 1
         elif (
-                return_mode # TODO: Support LITr/LIT2r
-                or instruction in (0x20, 0x40, 0x60)
+                instruction in (0x20, 0x40, 0x60)
                 or (
                     short_mode and (
                         i + 1 >= len(rom) or
@@ -109,8 +117,8 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
             line += f'{rom[i]:02x}'
             i += 1
         elif short_mode:
-            line += f'#{rom[i+1]:02x}'
-            line += f'{rom[i+2]:02x}'
+            line += f'{lit_prefix}{rom[i+1]:02x}'
+            line += f'{rom[i+2]:02x}{lit_postfix}'
             line += '\t( '
             line += f'{instruction:02x}'
             line += f'{rom[i+1]:02x}'
@@ -118,7 +126,7 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
             line += ' )'
             i += 3
         else:
-            line += f'#{rom[i+1]:02x}'
+            line += f'{lit_prefix}{rom[i+1]:02x}{lit_postfix}'
             line += '\t( '
             line += f'{instruction:02x}'
             line += f'{rom[i+1]:02x}'
