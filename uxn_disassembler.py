@@ -29,6 +29,7 @@ import typing
 SHORT_MODE_MASK = 0x20
 RETURN_MODE_MASK = 0x40
 KEEP_MODE_MASK = 0x80
+OPCODE_MASK = ~(KEEP_MODE_MASK | SHORT_MODE_MASK | RETURN_MODE_MASK)
 
 class OpCode(enum.IntEnum):
     LIT = 0x00
@@ -71,9 +72,7 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
         keep_mode = bool(instruction & KEEP_MODE_MASK)
         short_mode = bool(instruction & SHORT_MODE_MASK)
         return_mode = bool(instruction & RETURN_MODE_MASK)
-        opcode = OpCode(instruction & ~(KEEP_MODE_MASK |
-                                        SHORT_MODE_MASK |
-                                        RETURN_MODE_MASK))
+        opcode = OpCode(instruction & OPCODE_MASK)
 
         line = f'|{i+0x100:04x}\t'
 
