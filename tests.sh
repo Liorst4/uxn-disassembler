@@ -80,6 +80,58 @@ test_tal_correctnes() {
     rm "$DISASSEMBLED_ROM" "$REASSEMBLED_ROM"
 }
 
+test_edge_case_rom() {
+    TEMP_TAL=$(mktemp --suffix=".$1.edge-case.tal")
+    TEMP_ROM="$TEMP_TAL".rom
+    cat > "$TEMP_TAL"
+    $ASM "$TEMP_TAL" "$TEMP_ROM"
+    test_tal_vs_py "$TEMP_ROM"
+    test_tal_correctnes "$TEMP_ROM"
+    rm "$TEMP_TAL" "$TEMP_ROM"
+}
+
+test_truncated_lit() {
+    cat <<EOF | test_edge_case_rom truncated_lit
+|100
+80
+EOF
+}
+
+test_truncated_litr() {
+    cat <<EOF | test_edge_case_rom truncated_litr
+|100
+c0
+EOF
+}
+
+test_truncated_lit2_0() {
+    cat <<EOF | test_edge_case_rom truncated_lit2_0
+|100
+a0
+EOF
+}
+
+test_truncated_lit2_1() {
+    cat <<EOF | test_edge_case_rom truncated_lit2_1
+|100
+a0 00
+EOF
+}
+
+test_truncated_lit2r_0() {
+    cat <<EOF | test_edge_case_rom truncated_lit2r_0
+|100
+e0
+EOF
+}
+
+test_truncated_lit2r_1() {
+    cat <<EOF | test_edge_case_rom truncated_lit2r_1
+|100
+e0 00
+EOF
+}
+
 test_tal_vs_py ./disassembler.rom
 test_tal_correctnes ./disassembler.rom
 
@@ -89,3 +141,10 @@ if test -d "$ROMS_DIRECTORY"; then
 	test_tal_correctnes "$rom"
     done
 fi
+
+test_truncated_lit
+test_truncated_litr
+test_truncated_lit2_0
+test_truncated_lit2_1
+test_truncated_lit2r_0
+test_truncated_lit2r_1
