@@ -65,15 +65,6 @@ class OpCode(enum.IntEnum):
     EOR = 0x1e
     SFT = 0x1f
 
-def uxn_byte_literal(number: int) -> str:
-    text = hex(number)[2:]
-    if number < 0x10:
-        text = '0' + text
-    return text
-
-def uxn_short_literal(number: int) -> str:
-    return f'{number:04x}'
-
 def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
     i = 0
     while i < len(rom):
@@ -85,7 +76,7 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
                                         ModeMask.SHORT_MODE_MASK |
                                         ModeMask.RETURN_MODE_MASK))
 
-        line = f'|{uxn_short_literal(i+0x100)}\t'
+        line = f'|{i+0x100:04x}\t'
 
         if opcode != OpCode.LIT:
             line += opcode.name
@@ -95,13 +86,13 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
                 line += 'k'
             if return_mode:
                 line += 'r'
-            line += f'\t( {uxn_byte_literal(instruction)} )'
+            line += f'\t( {instruction:02x} )'
             yield line
             i += 1
             continue
 
         if not keep_mode and not return_mode and not short_mode:
-            line += f'BRK\t( {uxn_byte_literal(rom[i])} )'
+            line += f'BRK\t( {rom[i]:02x} )'
             i += 1
         elif (
                 return_mode
@@ -117,22 +108,22 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
                     and i + 1 >= len(rom)
                 )
         ):
-            line += f'{uxn_byte_literal(rom[i])}'
+            line += f'{rom[i]:02x}'
             i += 1
         elif short_mode:
-            line += f'#{uxn_byte_literal(rom[i+1])}'
-            line += f'{uxn_byte_literal(rom[i+2])}'
+            line += f'#{rom[i+1]:02x}'
+            line += f'{rom[i+2]:02x}'
             line += '\t( '
-            line += f'{uxn_byte_literal(instruction)}'
-            line += f'{uxn_byte_literal(rom[i+1])}'
-            line += f'{uxn_byte_literal(rom[i+2])}'
+            line += f'{instruction:02x}'
+            line += f'{rom[i+1]:02x}'
+            line += f'{rom[i+2]:02x}'
             line += ' )'
             i += 3
         else:
-            line += f'#{uxn_byte_literal(rom[i+1])}'
+            line += f'#{rom[i+1]:02x}'
             line += '\t( '
-            line += f'{uxn_byte_literal(instruction)}'
-            line += f'{uxn_byte_literal(rom[i+1])}'
+            line += f'{instruction:02x}'
+            line += f'{rom[i+1]:02x}'
             line += ' )'
             i += 2
 
