@@ -155,7 +155,7 @@ BRK
 
 ( Handle LIT BRK or fallback to just raw data )
 @handle-lit ( -- )
-	.ZeroPageGlobals/return-mode LDZ
+	.ZeroPageGlobals/return-mode LDZ ( TODO: Print LITr/LIT2r )
 
 	( Instruction is 0x20, 0x40 or 0x60 )
 	.ZeroPageGlobals/instruction LDZ

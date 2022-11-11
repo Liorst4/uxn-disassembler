@@ -93,7 +93,7 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
             line += f'BRK\t( {rom[i]:02x} )'
             i += 1
         elif (
-                return_mode
+                return_mode # TODO: Support LITr/LIT2r
                 or instruction in (0x20, 0x40, 0x60)
                 or (
                     short_mode and (
