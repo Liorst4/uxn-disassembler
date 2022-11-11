@@ -26,10 +26,9 @@ import enum
 import sys
 import typing
 
-class ModeMask(enum.IntEnum):
-    SHORT_MODE_MASK = 0x20
-    RETURN_MODE_MASK = 0x40
-    KEEP_MODE_MASK = 0x80
+SHORT_MODE_MASK = 0x20
+RETURN_MODE_MASK = 0x40
+KEEP_MODE_MASK = 0x80
 
 class OpCode(enum.IntEnum):
     LIT = 0x00
@@ -69,12 +68,12 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
     i = 0
     while i < len(rom):
         instruction = rom[i]
-        keep_mode = bool(instruction & ModeMask.KEEP_MODE_MASK)
-        short_mode = bool(instruction & ModeMask.SHORT_MODE_MASK)
-        return_mode = bool(instruction & ModeMask.RETURN_MODE_MASK)
-        opcode = OpCode(instruction & ~(ModeMask.KEEP_MODE_MASK |
-                                        ModeMask.SHORT_MODE_MASK |
-                                        ModeMask.RETURN_MODE_MASK))
+        keep_mode = bool(instruction & KEEP_MODE_MASK)
+        short_mode = bool(instruction & SHORT_MODE_MASK)
+        return_mode = bool(instruction & RETURN_MODE_MASK)
+        opcode = OpCode(instruction & ~(KEEP_MODE_MASK |
+                                        SHORT_MODE_MASK |
+                                        RETURN_MODE_MASK))
 
         line = f'|{i+0x100:04x}\t'
 
