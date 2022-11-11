@@ -87,60 +87,56 @@ def disassemble(rom: bytes) -> typing.Generator[str, None, None]:
 
         line = f'|{uxn_short_literal(i+0x100)}\t'
 
-        if opcode == OpCode.LIT:
-            if return_mode or instruction in (0x20, 0x40, 0x60):
-                line += f'{uxn_byte_literal(rom[i])}'
-                i += 1
-            elif not keep_mode:
-                line += f'BRK\t( {uxn_byte_literal(rom[i])} )'
-                i += 1
-            elif short_mode:
-                if i + 1 >= len(rom):
-                    line += f'{uxn_byte_literal(rom[i])}'
-                    i += 1
-                elif i + 2 >= len(rom):
-                    line += f'{uxn_byte_literal(rom[i])}'
-                    line += f'{uxn_byte_literal(rom[i+1])}'
-                    i += 2
-                else:
-                    line += f'#{uxn_byte_literal(rom[i+1])}'
-                    line += f'{uxn_byte_literal(rom[i+2])}'
-                    line += '\t( '
-                    line += f'{uxn_byte_literal(instruction)}'
-                    line += f'{uxn_byte_literal(rom[i+1])}'
-                    line += f'{uxn_byte_literal(rom[i+2])}'
-                    line += ' )'
-                    i += 3
-            else:
-                if i + 1 >= len(rom):
-                    line += f'{uxn_byte_literal(rom[i])}'
-                    i += 1
-                else:
-                    line += f'#{uxn_byte_literal(rom[i+1])}'
-                    line += '\t( '
-                    line += f'{uxn_byte_literal(instruction)}'
-                    line += f'{uxn_byte_literal(rom[i+1])}'
-                    line += ' )'
-                    i += 2
-
+        if opcode != OpCode.LIT:
+            line += opcode.name
+            if short_mode:
+                line += '2'
+            if keep_mode:
+                line += 'k'
+            if return_mode:
+                line += 'r'
+            line += f'\t( {uxn_byte_literal(instruction)} )'
             yield line
+            i += 1
             continue
 
-        line += opcode.name
-
-        if short_mode:
-            line += '2'
-
-        if keep_mode:
-            line += 'k'
-
-        if return_mode:
-            line += 'r'
-
-        line += f'\t( {uxn_byte_literal(instruction)} )'
+        if not keep_mode and not return_mode and not short_mode:
+            line += f'BRK\t( {uxn_byte_literal(rom[i])} )'
+            i += 1
+        elif (
+                return_mode
+                or instruction in (0x20, 0x40, 0x60)
+                or (
+                    short_mode and (
+                        i + 1 >= len(rom) or
+                        i + 2 >= len(rom)
+                    )
+                )
+                or (
+                    not short_mode
+                    and i + 1 >= len(rom)
+                )
+        ):
+            line += f'{uxn_byte_literal(rom[i])}'
+            i += 1
+        elif short_mode:
+            line += f'#{uxn_byte_literal(rom[i+1])}'
+            line += f'{uxn_byte_literal(rom[i+2])}'
+            line += '\t( '
+            line += f'{uxn_byte_literal(instruction)}'
+            line += f'{uxn_byte_literal(rom[i+1])}'
+            line += f'{uxn_byte_literal(rom[i+2])}'
+            line += ' )'
+            i += 3
+        else:
+            line += f'#{uxn_byte_literal(rom[i+1])}'
+            line += '\t( '
+            line += f'{uxn_byte_literal(instruction)}'
+            line += f'{uxn_byte_literal(rom[i+1])}'
+            line += ' )'
+            i += 2
 
         yield line
-        i += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
