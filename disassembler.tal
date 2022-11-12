@@ -103,7 +103,7 @@ BRK
 		Setup the file device for reading.
 	)
 	POP
-	#00 ;file-name-buffer ;file-name-buffer-offset LDA2 ADD2 STA
+	;file-name-buffer-offset LDA2 .File/length DEO2
 	;file-name-buffer .File/name DEO2
 
 @file-read-loop ( -- )
@@ -195,8 +195,9 @@ JMP2r
 
 ( Print the instruction and the following byte as a byte literal. Example: `#ff` )
 &emit-byte-literal
-	.rom-offset LDZ2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
-	.File/read DEI DUP ( TODO: Check for errors )
+	.File/read DEI
+	.File/success DEI2 #0000 EQU2 ,&truncated-literal-byte JCN
+	DUP
 	;emit-lit-prefix JSR2
 	;emit-byte JSR2
 	;emit-lit-postfix JSR2
@@ -212,12 +213,19 @@ JMP2r
 
 	.rom-offset LDZ2 INC2 INC2 .rom-offset STZ2
 JMP2r
+&truncated-literal-short ( the second byte of a short literal is missing )
+	POP
+&truncated-literal-byte ( the first byte of a literal is missing )
+	POP
+	;undo-lit-read JSR2
+	;emit-raw-byte JMP2
 
 ( Print the instruction and the following short as a short literal. Example: `#ffff` )
 &emit-short-literal
-	.rom-offset LDZ2 #0003 ADD2 .File/length DEI2 EQU2 ;emit-raw-byte JCN2
-	.File/read DEI ( TODO: Check for errors )
-	.File/read DEI ( TODO: Check for errors )
+	.File/read DEI
+	.File/success DEI2 #0000 EQU2 ,&truncated-literal-byte JCN
+	.File/read DEI
+	.File/success DEI2 #0000 EQU2 ,&truncated-literal-short JCN
 	;emit-lit-prefix JSR2
 	DUP2
 	;emit-short JSR2
@@ -252,6 +260,7 @@ JMP2r
 
 ( Halt the program )
 @eof
+	POP
 	#01 .System/state DEO
 	BRK ( Exit evaluation context so the state change will take effect )
 
@@ -285,6 +294,21 @@ JMP2r
 ( Print a number between 0 to 15 to the screen in hexadecimal )
 @emit-nibble ( byte -- )
 	#00 SWP ;hex-table ADD2 LDA EMIT
+JMP2r
+
+( Rewind the ROM file cursor to rom-offset+1 )
+@undo-lit-read ( -- )
+	;file-name-buffer .File/name DEO2 ( Re open the file )
+	.rom-offset LDZ2
+	DUP2 #0000 EQU2 ,&end JCN
+&read-again
+	.File/read DEI POP
+	#0001 SUB2
+	DUP2 #0000 EQU2 ,&end JCN
+	,&read-again JMP
+&end
+	POP2
+	.File/read DEI POP
 JMP2r
 
 @hex-table
