@@ -180,7 +180,7 @@ JMP2r
 &emit-lit-postfix-end
 JMP2r
 
-( Handle LIT BRK or fallback to just raw data )
+( Handle LIT BRK or fallback to just plain data )
 @handle-lit ( -- )
 	( Instruction is 0x20, 0x40 or 0x60 )
 	.instruction LDZ
@@ -188,7 +188,7 @@ JMP2r
 	OVR #40 EQU ORA	( instruction instruction==0x20 )
 	SWP #60 EQU ORA ( instruction instruction==0x20|instruction==0x40 )
 			( instruction==0x20|instruction==0x40|instruction==0x60 )
-	;emit-raw-byte JCN2
+	;emit-plain-byte JCN2
 
 	.keep-mode LDZ #00 EQU ;emit-brk JCN2
 
@@ -219,7 +219,7 @@ JMP2r
 &truncated-literal-byte ( the first byte of a literal is missing )
 	POP
 	;undo-lit-read JSR2
-	;emit-raw-byte JMP2
+	;emit-plain-byte JMP2
 
 ( Print the instruction and the following short as a short literal. Example: `#ffff` )
 &emit-short-literal
@@ -244,8 +244,8 @@ JMP2r
 	.rom-offset LDZ2 #0003 ADD2 .rom-offset STZ2
 JMP2r
 
-( Print the instruction as raw data. Example: `ff` )
-@emit-raw-byte ( -- )
+( Print the instruction as plain data. Example: `ff` )
+@emit-plain-byte ( -- )
 	.instruction LDZ ;emit-byte JSR2
 	.rom-offset LDZ2 INC2 .rom-offset STZ2
 JMP2r
