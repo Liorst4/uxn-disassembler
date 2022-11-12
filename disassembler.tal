@@ -71,16 +71,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ( Zero page variables )
 |0000
-@rom-offset	$2
-@instruction	$1
-@opcode		$1
-@keep-mode	$1
-@short-mode	$1
-@return-mode	$1
+@rom-offset			$2
+@instruction			$1
+@opcode				$1
+@keep-mode			$1
+@short-mode			$1
+@return-mode			$1
+@file-name-buffer-offset	$2
 
 |0100 ( entry point )
 	#0000 .rom-offset STZ2
-	#0000 ;file-name-buffer-offset STA2
+	#0000 .file-name-buffer-offset STZ2
 	;on-console .Console/vector DEO2
 BRK
 
@@ -94,8 +95,8 @@ BRK
 	.Console/read DEI DUP
 	( Write file name to file-name-buffer )
 	#0a EQU ,&file-name-end JCN
-	;file-name-buffer ;file-name-buffer-offset LDA2 ADD2 STA
-	;file-name-buffer-offset LDA2 INC2 ;file-name-buffer-offset STA2
+	;file-name-buffer .file-name-buffer-offset LDZ2 ADD2 STA
+	.file-name-buffer-offset LDZ2 INC2 .file-name-buffer-offset STZ2
 BRK
 &file-name-end
 	(
@@ -103,7 +104,7 @@ BRK
 		Setup the file device for reading.
 	)
 	POP
-	;file-name-buffer-offset LDA2 .File/length DEO2
+	.file-name-buffer-offset LDZ2 .File/length DEO2
 	;file-name-buffer .File/name DEO2
 
 @file-read-loop ( -- )
@@ -349,5 +350,4 @@ JMP2r
 "EOR
 "SFT
 
-@file-name-buffer-offset $2
 @file-name-buffer
