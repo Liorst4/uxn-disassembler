@@ -44,7 +44,13 @@ py_dis() {
 tal_dis() {
     INPUT="$1"
     OUTPUT="$2"
-    $EMU ./disassembler.rom "$INPUT" > "$OUTPUT"
+    cp "$INPUT" disassembler_input.rom # Because of the sandbox
+
+    # The current implementation of uxncli returns the value in System/state, which will be 1
+    $EMU ./disassembler.rom disassembler_input.rom > "$OUTPUT" || true
+    # TODO: Remove that `|| true`
+
+    rm disassembler_input.rom
 }
 
 test_tal_vs_py() {

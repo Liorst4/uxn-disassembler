@@ -53,9 +53,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 @Console
 	&vector	$2
 	&read	$1
-	&_	$5
+	&_	$4
+	&type	$1
 	&write	$1
 	&error	$1
+	&__	$6
 
 |00a0
 @File
@@ -92,9 +94,9 @@ BRK
 		The cli arguments are injected to the console device
 		by the emulator, ending with a newline character.
 	)
-	.Console/read DEI DUP
+	.Console/type DEI #02 NEQ ,&file-name-end JCN
 	( Write file name to file-name-buffer )
-	#0a EQU ,&file-name-end JCN
+	.Console/read DEI
 	;file-name-buffer .file-name-buffer-offset LDZ2 ADD2 STA
 	.file-name-buffer-offset LDZ2 INC2 .file-name-buffer-offset STZ2
 BRK
@@ -103,13 +105,12 @@ BRK
 		The cli argument was loaded.
 		Setup the file device for reading.
 	)
-	POP
 	.file-name-buffer-offset LDZ2 .File/length DEO2
 	;file-name-buffer .File/name DEO2
 
 @file-read-loop ( -- )
 	( read an instruction )
-	.File/read DEI DUP
+	;read-one-byte-from-file JSR2 DUP
 	.File/success DEI2 #0000 EQU2 ;eof JCN2
 	.instruction STZ
 
@@ -196,7 +197,7 @@ JMP2r
 
 ( Print the instruction and the following byte as a byte literal. Example: `#ff` )
 &emit-byte-literal
-	.File/read DEI
+	;read-one-byte-from-file JSR2
 	.File/success DEI2 #0000 EQU2 ,&truncated-literal-byte JCN
 	DUP
 	;emit-lit-prefix JSR2
@@ -223,9 +224,9 @@ JMP2r
 
 ( Print the instruction and the following short as a short literal. Example: `#ffff` )
 &emit-short-literal
-	.File/read DEI
+	;read-one-byte-from-file JSR2
 	.File/success DEI2 #0000 EQU2 ,&truncated-literal-byte JCN
-	.File/read DEI
+	;read-one-byte-from-file JSR2
 	.File/success DEI2 #0000 EQU2 ,&truncated-literal-short JCN
 	;emit-lit-prefix JSR2
 	DUP2
@@ -259,9 +260,12 @@ JMP2r
 	.rom-offset LDZ2 INC2 .rom-offset STZ2
 JMP2r
 
+( TODO: JCI JMI JSI )
+
 ( Halt the program )
 @eof
 	POP
+	( TODO: Exit with state as 0 )
 	#01 .System/state DEO
 	BRK ( Exit evaluation context so the state change will take effect )
 
@@ -303,14 +307,21 @@ JMP2r
 	.rom-offset LDZ2
 	DUP2 #0000 EQU2 ,&end JCN
 &read-again
-	.File/read DEI POP
+	;read-one-byte-from-file JSR2 POP
 	#0001 SUB2
 	DUP2 #0000 EQU2 ,&end JCN
 	,&read-again JMP
 &end
 	POP2
-	.File/read DEI POP
+	;read-one-byte-from-file JSR2 POP
 JMP2r
+
+@read-one-byte-from-file ( -- byte f )
+	#0001 .File/length DEO2
+	;&buf .File/read DEO2
+	;&buf LDA
+JMP2r
+	&buf $1
 
 @hex-table
 "0123456789
